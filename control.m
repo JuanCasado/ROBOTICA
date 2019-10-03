@@ -5,13 +5,19 @@ msg_sonar0 msg_sonar1 msg_sonar2 msg_sonar3 msg_sonar4 msg_sonar5 msg_sonar6 msg
 dist = distance();
 acc_distance = acc_distance + dist;
 ang_diff = angdiff(yawinit, yaw);
-display(acc_distance)
-display(ang_diff)
+min_range = min(msg_laser.Ranges);
+%display(acc_distance)
+%display(ang_diff)
+display(min_range)
 
-if  ang_diff > 1
+if  acc_distance > 50
     stop()
     keep_looping = 0;
 else
-    rotate(2)
-    %move(1, 1)
+    if min_range > 0.5
+        %rotate(2)
+        move(0.2, 0)
+    else
+        stop()
+    end
 end

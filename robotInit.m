@@ -26,7 +26,7 @@ stop();
 
 pause(0.5);
 
-msg_motor_state = 1;
+msg_motor_state.Data = 1;
 send(pub_motor_state, msg_motor_state);
 msg_init_pos = sub_odom.LatestMessage();
 initori = msg_init_pos.Pose.Pose.Orientation;
