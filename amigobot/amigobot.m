@@ -14,7 +14,8 @@ function amigobot(id)
     while(keep_looping)
         updateState();
         displayRobot();
-        control();
+        %control();
+        move(1,0);
         send(pub_vel, msg_vel);
         waitfor(rate);
     end

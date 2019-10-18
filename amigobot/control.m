@@ -8,13 +8,13 @@ ang_diff = angdiff(yawinit, yaw);
 min_range = min(msg_laser.Ranges);
 %display(acc_distance)
 %display(ang_diff)
-display(min_range)
+%display(min_range)
 
 if  acc_distance > 50
     stop()
     keep_looping = 0;
 else
-    if min_range > 0.5
+    if min_range > 0.1
         %rotate(2)
         move(0.2, 0)
     else
