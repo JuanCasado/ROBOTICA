@@ -47,7 +47,7 @@ slamAlg.LoopClosureSearchRadius = 8;
 % The plot is updated continuously as robot navigates through virtual scene
 
 firstLoopClosure = false;
-sub_laser = rossubscriber('/robot0/laser', 'sensor_msgs/LaserScan');
+sub_laser = rossubscriber('/scan', 'sensor_msgs/LaserScan');
 r = robotics.Rate(20);
 figure
 while (1)

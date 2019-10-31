@@ -20,7 +20,7 @@ sub_sonar7 = rossubscriber('/sonar_7', 'sensor_msgs/Range');
 
 pub_vel = rospublisher('/cmd_vel', 'geometry_msgs/Twist');
 msg_vel = rosmessage(pub_vel);
-pub_motor_state = rospublisher('/motor_state', 'std_msgs/Int32');
+pub_motor_state = rospublisher('/cmd_motor_state', 'std_msgs/Int32');
 msg_motor_state = rosmessage(pub_motor_state);
 stop();
 

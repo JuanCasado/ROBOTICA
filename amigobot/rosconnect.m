@@ -1,13 +1,13 @@
 
 function rosconnect (ip)
     if ip == 0
-        URI = "http://172.22.88.103:11311";%SIMULADOR
+        URI = "http://172.29.30.55:11311";%SIMULADOR
     elseif ip == 1
-        URI = "http://172.29.30.172:11311";%ROBOT
+        URI = "http://172.29.30.176:11311";%ROBOT
     else
         URI = ip;%OTHER
     end
-    IP_LOCAL_MACHINE = "172.29.29.52";
+    IP_LOCAL_MACHINE = "172.29.29.59";
 
     rosshutdown()
     rosinit(URI,"NodeHost",IP_LOCAL_MACHINE);
