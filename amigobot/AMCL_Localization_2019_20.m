@@ -40,7 +40,7 @@
 % |ipaddress|. Replace '172.28.195.100' with the IP address of your robot in virtual 
 % machine or real.
 
-connect_to_robot = 1;
+connect_to_robot = 0;
 rosconnect(connect_to_robot);
 if connect_to_robot
     robotInit();
@@ -59,8 +59,8 @@ end
 % or real. Refer to <docid:robotics_examples.example-MappingWithKnownPosesExample 
 % Mapping With Known Poses> for a more detailed explanation.
 
-load slam_modificado.mat
-map = map_cleaned;
+load simulador_slam.mat
+%map = map_cleaned;
 figure('Name', 'Mapa')
 show(map);
 %% Setup the laser sensor model and amigobot motion model
@@ -171,12 +171,12 @@ amcl.ResamplingInterval = 1;
 % an example on using global localization.
 
 amcl.ParticleLimits = [50000, 10000];           % Minimum and maximum number of particles
-amcl.GlobalLocalization = true;      % global = true      local=false
+amcl.GlobalLocalization = false;      % global = true      local=false
 
 %Con localozación global estos dos parámetros ya no se usan, habrá
 %partículas por todos los lados
-%amcl.InitialPose = ...;              % Initial pose of vehicle   
-%amcl.InitialCovariance = diag([1 1 1])*...; % Covariance of initial pose
+amcl.InitialPose = [2 2 0];              % Initial pose of vehicle   
+amcl.InitialCovariance = diag([1 1 1])*0.6; % Covariance of initial pose
 
 %% Setup helper for visualization and driving AmigoBot.
 % Setup ExampleHelperAMCLVisualization to plot the map and update robot's estimated 
