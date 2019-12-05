@@ -13,4 +13,8 @@ function rosconnect (ip)
     rosinit(URI,"NodeHost",IP_LOCAL_MACHINE);
     pause(0.5)
     display("CONECTED TO ROS")
+<<<<<<< HEAD
 end
+=======
+end
+>>>>>>> d36102dc56f28aa7314c3c999a6939d460bfc15a
