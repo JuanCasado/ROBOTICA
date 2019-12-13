@@ -4,7 +4,7 @@ clear all
 
 global sub_laser sub_odom msg_vel pub_vel
 
-connect_to_robot = 0;
+connect_to_robot = 1;
 rosconnect(connect_to_robot);
 if connect_to_robot
     robotInit();
@@ -70,9 +70,9 @@ umbralyaw = umbraly;
 
 k_rotate = 0.12;
 k_vel = 0.08;
-vel = 0.1;
-max_vel = 0.2;
-min_vel = 0.05;
+vel = 0.15;
+max_vel = 0.3;
+min_vel = 0.08;
 safe_distance = 1;
 
 rate = robotics.Rate(20);
@@ -121,70 +121,77 @@ disp(' - Localizado - ')
 stop()
 send(pub_vel, msg_vel);
 %%
-goal = [15 1];
+goals = [24 2.5; 8 1; 19 2];
+min_distance = 0.2;
 cpMap= copy(map);
 inflate(cpMap,0.3);
-
 planner = robotics.PRM(cpMap, 500);
 planner.ConnectionDistance = 2.5;
-path = findpath(planner, estimatedPose(1:2), goal);
-figure;
-show(planner)
-
-disp(' - Ruta Creada - ')
-
+VFH.TargetDirectionWeight=2;
 controller = robotics.PurePursuit;
-controller.LookaheadDistance = 0.4;
-controller.MaxAngularVelocity = 1;
+controller.LookaheadDistance = 3;
+controller.MaxAngularVelocity = 0.5;
 controller.DesiredLinearVelocity = vel;
-controller.Waypoints = path;
-VFH.TargetDirectionWeight=1;
 
-min_distance = 0.06;
+ponderation_go = 0.9;
 
-goal_reached = false;
-while(~goal_reached)
-    msg_laser = receive(sub_laser);
-    odompose = sub_odom.LatestMessage;
-    scans = lidarScan(msg_laser);
-    
-    odomQuat = [odompose.Pose.Pose.Orientation.W, odompose.Pose.Pose.Orientation.X, ...
-        odompose.Pose.Pose.Orientation.Y, odompose.Pose.Pose.Orientation.Z];
-    odomRotation = quat2eul(odomQuat);
-    pose = [odompose.Pose.Pose.Position.X, odompose.Pose.Pose.Position.Y odomRotation(1)];
-    [isUpdated,estimatedPose, estimatedCovariance] = amcl(pose, scans);
-    
-    [vel, ang_vel] = controller(estimatedPose);
-    theta = VFH(scans,ang_vel*k_rotate);
-    final_theta = ang_vel*0.6 + theta*0.4;
-    
-    min_range = min(msg_laser.Ranges);
-    error_d = safe_distance - min_range;
-    goto_vel = vel - error_d*k_vel;
-    if goto_vel > max_vel
-        goto_vel = max_vel;
-    elseif goto_vel < min_vel
-        goto_vel = min_vel;
+for current_goal = 1:size(goals,1)
+    goal = goals(current_goal,:);
+    path = findpath(planner, estimatedPose(1:2), goal);
+    figure;
+    show(planner)
+    disp(' - Ruta Creada - ')
+    controller.Waypoints = path;
+
+    goal_reached = false;
+    while(~goal_reached)
+        msg_laser = receive(sub_laser);
+        odompose = sub_odom.LatestMessage;
+        scans = lidarScan(msg_laser);
+
+        odomQuat = [odompose.Pose.Pose.Orientation.W, odompose.Pose.Pose.Orientation.X, ...
+            odompose.Pose.Pose.Orientation.Y, odompose.Pose.Pose.Orientation.Z];
+        odomRotation = quat2eul(odomQuat);
+        pose = [odompose.Pose.Pose.Position.X, odompose.Pose.Pose.Position.Y odomRotation(1)];
+        [isUpdated,estimatedPose, estimatedCovariance] = amcl(pose, scans);
+
+        [vel, ang_vel] = controller(estimatedPose);
+        theta = VFH(scans,ang_vel*k_rotate);
+        final_theta = ang_vel*ponderation_go + theta*(1 - ponderation_go);
+
+        min_range = min(msg_laser.Ranges);
+        error_d = safe_distance - min_range;
+        if min_range < 0.6
+            ponderation_go = 0.8;
+        else
+            ponderation_go = 0.9;
+        end
+        goto_vel = vel - error_d*k_vel;
+        if goto_vel > max_vel
+            goto_vel = max_vel;
+        elseif goto_vel < min_vel
+            goto_vel = min_vel;
+        end
+
+        move(goto_vel, 0)
+        rotate (final_theta);
+        send(pub_vel, msg_vel);
+
+        distance_to_goal = ((goal(1) - estimatedPose(1))^2 + (goal(2) -estimatedPose(2))^2)^(1/2);
+        if distance_to_goal < min_distance
+            goal_reached = true;
+        end
+
+        figure(fig_laser);plot(msg_laser);
+        if isUpdated
+            i = i + 1;
+            plotStep(visualizationHelper, amcl, estimatedPose, scans, i)
+        end
+
+        waitfor(rate);
     end
-    
-    move(goto_vel, 0)
-    rotate (final_theta);
-    send(pub_vel, msg_vel);
-    
-    distance_to_goal = ((goal(1) - estimatedPose(1))^2 + (goal(2) -estimatedPose(2))^2)^(1/2);
-    if distance_to_goal < min_distance
-        goal_reached = true;
-    end
-    
-    figure(fig_laser);plot(msg_laser);
-    if isUpdated
-        i = i + 1;
-        plotStep(visualizationHelper, amcl, estimatedPose, scans, i)
-    end
-    
-    waitfor(rate);
+    disp(strcat(' - Goal Reached - ',string(current_goal)))
 end
 
-disp(' - Goal Reached - ')
-
+disp(' - END - ')
 rosdisconnect()
